@@ -21,14 +21,11 @@ dist/                          ← 릴리스 zip (skill 폴더만 담김)
 
 ```bash
 git clone https://github.com/IrumHahn/openclaw-agent-team-onboarding.git
-mkdir -p ~/.openclaw/skills
-cp -R openclaw-agent-team-onboarding/skill/agent-team-onboarding ~/.openclaw/skills/
-openclaw skills list        # agent-team-onboarding 이 보이면 성공
+openclaw skills install ./openclaw-agent-team-onboarding/skill/agent-team-onboarding --as agent-team-onboarding --agent main
+openclaw skills list | grep agent-team-onboarding     # ready 가 보이면 성공
 ```
 
-Git이 없으면 [Releases](https://github.com/IrumHahn/openclaw-agent-team-onboarding/releases)의 `agent-team-onboarding.skill`(zip)을 받아 `unzip agent-team-onboarding.skill -d ~/.openclaw/skills/` 합니다. 같은 이름의 폴더가 이미 있으면 먼저 백업하세요. 설치 후 **새 세션**에서 시작합니다.
-
-> `openclaw skills install` 명령은 OpenClaw 버전에 따라 없을 수 있어 사용하지 않습니다. 폴더 복사가 모든 버전에서 통합니다.
+`--agent main` 은 에이전트가 2명 이상일 때 필수입니다(없으면 "Pass --agent <id>" 오류). Git이 없으면 [Releases](https://github.com/IrumHahn/openclaw-agent-team-onboarding/releases)의 `agent-team-onboarding.skill`(zip)을 받아 압축을 푼 폴더를 같은 명령으로 설치합니다. 설치 후 **새 세션**에서 시작합니다. (OpenClaw 2026.10.3 호스팅어 템플릿에서 확인. 구버전에 `skills install` 이 없으면 `cp -R skill/agent-team-onboarding ~/.openclaw/skills/`.)
 
 ## 사용
 
@@ -48,7 +45,7 @@ Git이 없으면 [Releases](https://github.com/IrumHahn/openclaw-agent-team-onbo
 - OpenClaw CLI(`agents add`, `agents set-identity`), Node.js 18+. npm 의존성 없음.
 - 위임 설정은 `config patch` → `config set` → **수동 안내** 순으로 시도합니다. 자동 설정이 불가능한 버전이면 에이전트 생성은 완료하고 종료코드 2와 함께 사람이 할 2줄을 출력합니다. `subagents.delegationMode`는 `--delegation-mode`를 명시할 때만 씁니다.
 - 중간 실패 → `status`로 확인, `apply --resume`로 이어서, `rollback`으로 이 도구가 만든 것만 제거. 기존 에이전트는 건드리지 않습니다.
-- 이 저장소의 테스트는 실제 OpenClaw 없이 `tests/fake-openclaw/`로 돕니다: `node --test tests/*.test.mjs`. 실제 OpenClaw 버전에서의 동작은 배포 전 1회 확인이 필요합니다.
+- 이 저장소의 테스트는 실제 OpenClaw 없이 `tests/fake-openclaw/`로 돕니다: `node --test tests/*.test.mjs`(13개). 호스팅어 VPS(OpenClaw 2026.10.3)에서 preview→apply→위임 설정까지 실증했습니다. 알려진 이슈: 그 버전의 `openclaw agents delete` 가 "not found" 를 내는 경우가 있어 rollback 은 수동 단계를 출력합니다.
 - 프로필: `--profile <name>`. 워크스페이스 위치: 기본은 활성 OpenClaw 상태 디렉터리의 `workspaces/<team-id>/`, `--workspace-root`로 변경.
 
 ## 개발

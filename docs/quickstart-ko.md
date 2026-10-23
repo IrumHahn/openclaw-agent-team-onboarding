@@ -7,14 +7,13 @@
 ```bash
 cd ~
 git clone https://github.com/IrumHahn/openclaw-agent-team-onboarding.git
-mkdir -p ~/.openclaw/skills
-cp -R openclaw-agent-team-onboarding/skill/agent-team-onboarding ~/.openclaw/skills/
-openclaw skills list
+openclaw skills install ./openclaw-agent-team-onboarding/skill/agent-team-onboarding --as agent-team-onboarding --agent main
+openclaw skills list | grep agent-team-onboarding
 ```
 
-마지막 줄 결과에 `agent-team-onboarding`이 보이면 설치된 것입니다. 안 보이면 새 OpenClaw 세션을 열고 "agent-team-onboarding 스킬이 보이는지 알려줘"라고 물어보세요.
+`ready │ agent-team-onboarding` 이 보이면 설치된 것입니다. `--agent main` 은 에이전트가 여러 명일 때 꼭 필요합니다. 안 보이면 새 OpenClaw 세션을 열고 "agent-team-onboarding 스킬이 보이는지 알려줘"라고 물어보세요.
 
-> Git이 없다면: GitHub 페이지의 **Releases**에서 `agent-team-onboarding.skill` 파일을 받아 압축을 풀고(`unzip agent-team-onboarding.skill -d ~/.openclaw/skills/`) 위와 같이 확인합니다.
+> Git이 없다면: GitHub 페이지의 **Releases**에서 `agent-team-onboarding.skill` 파일을 받아 압축을 풀고, 푼 폴더를 위 `openclaw skills install <폴더> …` 로 설치합니다.
 
 ## 2. 시작 (OpenClaw 채팅, 5분)
 
@@ -49,7 +48,7 @@ openclaw agents list
 
 | 증상 | 해결 |
 |---|---|
-| "스킬이 안 보여요" | `ls ~/.openclaw/skills/agent-team-onboarding/SKILL.md`로 파일 확인 → 새 세션 열기 |
+| "스킬이 안 보여요" | `openclaw skills list | grep onboarding` → 없으면 설치 명령에 `--agent main` 을 붙여 다시 → 새 세션 열기 |
 | 중간에 실패했어요 | 비서에게 "팀 생성 상태 확인해줘" → 남은 것만 이어서 만들거나(`--resume`) 되돌리기(`rollback`)를 안내받습니다 |
 | "위임 설정은 수동으로 하라"고 나와요 | 에이전트는 만들어진 것입니다. 안내된 설정 2줄만 설정 파일에 넣으면 됩니다. 1주차에는 없어도 괜찮습니다 |
 | 토큰을 넣었더니 거부돼요 | 정상입니다. 인터뷰 답에는 비밀번호·키를 넣지 않습니다 |
