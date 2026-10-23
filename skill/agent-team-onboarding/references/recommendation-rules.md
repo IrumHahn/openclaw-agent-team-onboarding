@@ -1,11 +1,24 @@
-# Team recommendation rules
+# 팀 추천 규칙
 
-1. Decompose the **first goal**, not the entire organization, into work streams with distinct outputs. Map each stream to the success criterion and current constraints.
-2. Audit existing OpenClaw agents. Reuse a suitable existing agent where feasible; do not modify it without a separately reviewed proposal.
-3. Start with one agent if there is one main stream. Use 2–4 only when handoffs, independent review, or parallel specialties produce a clear advantage. More agents mean more coordination and cost; do not create a specialist just to fill a template.
-4. For 2+ newly created agents, one is the coordinator and the rest are specialists. The coordinator owns the user-facing plan, assigns bounded tasks, reconciles results, and reports progress. Specialists own specific deliverables and return evidence. Avoid two agents owning the same final decision.
-5. Every card must answer: *Why this role now? What will it make? What task comes first? What proves the task is done? What must it not do?* If any answer is weak, merge or remove the role.
-6. Suggest a 7-day starter sequence. Early tasks should establish facts and produce reviewable internal artifacts before outbound or irreversible action. Separate recommendations from execution.
-7. Personality supports trust and recall. Tie names, tone, avatar motif, and interaction style to the user's preferences, while keeping boundaries and uncertainty explicit.
+1. **조직 전체가 아니라 첫 목표**를 산출물이 다른 작업 흐름으로 쪼갠다. 각 흐름을 성공 기준·제약에 연결한다.
+2. 기존 OpenClaw 에이전트를 점검한다. 맞는 기존 에이전트가 있으면 재사용하고, 별도 검토 없이 수정하지 않는다.
+3. 주된 흐름이 하나면 **에이전트 1명**으로 시작한다. 2~4명은 인수인계·독립 검수·병렬 전문성이 분명한 이득일 때만. 에이전트가 많을수록 조정 비용과 비용이 는다. 템플릿을 채우려고 전문가를 만들지 않는다.
+4. 새 에이전트가 2명 이상이면 **총괄 1명 + 전문가**. 총괄은 사용자 대면 계획·작업 배분·결과 취합·진행 보고를 맡는다. 전문가는 특정 산출물을 맡고 근거를 돌려준다. 같은 최종 결정을 두 에이전트가 갖지 않게 한다.
+5. 모든 카드는 답해야 한다: *왜 이 역할이 지금? 무엇을 만들까? 첫 과제는? 끝났다는 증거는? 하면 안 되는 것은?* 하나라도 약하면 합치거나 뺀다.
+6. 7일 시작 순서를 제안한다. 초기 과제는 외부·되돌릴 수 없는 행동 전에 사실을 확인하고 검토 가능한 내부 산출물을 만든다. 추천과 실행을 구분한다.
+7. 성격은 신뢰와 기억을 돕는다. 이름·말투·아바타 모티프·상호작용 방식을 사용자 취향에 맞추되, 경계와 불확실성은 분명히 남긴다.
 
-Common work streams (examples, never defaults): discovery/research, product or strategy planning, writing/design, implementation/automation, QA/review, operations/customer support. Choose based on answers rather than matching keywords.
+흔한 작업 흐름(예시일 뿐 기본값 아님): 조사/탐색, 제품·전략 기획, 글쓰기/디자인, 구현/자동화, QA/검수, 운영/고객 응대. 키워드 매칭이 아니라 답을 보고 고른다.
+
+## 실행학교 1주차 프리셋 (수강생 환경에서만)
+
+전제: 수강생은 VPS에 OpenClaw, PC에 노드, Codex 구독이 있고, 1주차 목표는 "내 비서가 내 PC를 읽고 Codex로 파일을 만든다"이다. 이때 기본 제안은:
+
+| 역할 | 왜 지금 | 첫 과제 | 담당 메뉴 후보 |
+|---|---|---|---|
+| **메인 비서(총괄)** — 사용자가 고른 이름 | 모든 지시가 여기로 들어온다. 1주차 발표에서 소개할 얼굴 | `my-work-map.md`를 읽고 이번 주 할 일 3개를 `tasks`로 정리 | 업무현황 · 팀관리 · 나의 메모 |
+| **코딩 담당(전문)** — Codex 호출 전담 | 파일 생성·스크립트 작업을 비서가 직접 하지 않고 위임하는 습관을 1주차부터 | 비서가 넘긴 요청으로 파일 1개 만들어 결과 보고 | 설정 |
+
+- 업무 지도 상위 3개에 글쓰기·발행이 있으면 **글감 담당**(글감실), 메일 응대가 있으면 **응대 담당**(이메일)을 3·4번째로 제안한다. 없으면 2명으로 끝낸다.
+- 담당 메뉴는 `team.json`의 `menus`로 들어가며, `dashboard-builder`가 "메뉴 = 직원"으로 사용한다. 메뉴 키는 `tasks, proposals, agents, operations, email, contacts, meetings, notes, notebooks, ideas, news, landing, settings` 등 대시보드 메뉴 트리의 키를 쓴다(정확한 목록은 dashboard-builder의 `references/menu-tree.md`).
+- 프리셋도 **제안**이다. 사용자가 역할을 빼거나 바꾸면 따른다.

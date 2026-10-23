@@ -1,13 +1,29 @@
-# Interview cards
+# 인터뷰 카드
 
-Ask the four core questions from `SKILL.md` first. Keep each card short. If the user already answered one, summarize it and move on.
+핵심 4장을 먼저, 한 화면에 함께 보여준다. 카드는 짧게. 이미 답한 카드는 요약하고 넘어간다. 사용자 언어로 묻는다(아래는 한국어 기본, 영어 병기).
 
-## Immersion cards (optional, ask together)
+## 핵심 카드 (필수)
 
-1. **Relationship:** Should the team feel like professional colleagues, warm collaborators, or a character/world-inspired cast? What should agents call you? Formal or casual speech?
-2. **Personality and voice:** What names, archetypes, animals, works, or character qualities would make the agents memorable? What expressions or behaviors do you dislike? “Surprise me” is valid. Treat examples as inspiration, not an instruction to impersonate a copyrighted character or real person.
-3. **Visual identity:** Preferred emoji, palette, avatar style, or visual motif? Do you want generated avatars later, or simple text/emoji now? Never claim an avatar was generated if only a motif was written.
+| # | 카드 | 질문 | 영어 |
+|---|---|---|---|
+| 01 | 조직 | 무슨 일을 하나요? 제품·서비스와 고객(이용자)은 누구인가요? | What does the organization do, and who are its customers or users? |
+| 02 | 첫 목표 | 무엇을 **먼저** 이루고 싶나요? 지금 상황은 어떤가요? | What is the first goal or problem, and what is the current state? |
+| 03 | 제약 | 기한·예산·쓰는 도구·함께하는 사람·꼭 지킬 조건은요? "미정"도 답입니다. | Deadline, budget, tools, collaborators, hard constraints? "Undecided" is valid. |
+| 04 | 성공 기준 | 무엇이 보이면 "됐다"고 할 수 있나요? 산출물·숫자·상태로. | What observable deliverable, number, or state would mean success? |
 
-Translate answers into each agent's `IDENTITY.md`, `SOUL.md`, and `USER.md`. Use contrast to sharpen behavior: three desired traits and three counter-traits (“decisive, not domineering”). Include three short examples of actual phrasing: ordinary update, respectful disagreement, and blocked/error report. Define forbidden behavior and a failure-recovery sequence. Make personas distinct without making job responsibility vague.
+답이 두루뭉술하면 예시를 하나 보여준다. 예: "성공 기준 → 매주 월요일 아침 주간 리포트가 텔레그램으로 온다".
 
-If immersion questions are skipped, choose clear names and differentiated professional styles; explain they can be revised later. Never infer personal facts or preferences from a fictional reference alone.
+## 몰입 카드 (선택, 한꺼번에)
+
+1. **관계:** 전문 동료 같은 팀? 따뜻한 협력자? 캐릭터·세계관이 있는 팀? 에이전트가 나를 뭐라고 부를까요? 존댓말/반말?
+2. **성격과 말투:** 기억에 남을 이름·원형·동물·작품·성격 특징이 있나요? 싫어하는 표현·행동은? "추천해줘"도 됩니다. 예시는 영감일 뿐, 저작권 캐릭터나 실존 인물을 흉내 내지 않는다.
+3. **외형:** 선호 이모지·색·아바타 스타일? 나중에 이미지 생성을 원하는지, 지금은 텍스트/이모지로 충분한지? 모티프만 적고 아바타를 만들었다고 말하지 않는다.
+
+답을 각 에이전트의 `IDENTITY.md`, `SOUL.md`, `USER.md`에 옮긴다. 대비로 성격을 선명하게: 원하는 특성 3개와 반대 특성 3개("결단력 있되 군림하지 않음"). 실제 말투 예시 3개: 평상시 보고 · 정중한 반대 · 막힘/오류 보고. 금지 행동과 실패 복구 순서를 정한다. 성격은 구별되게, 업무 책임은 흐려지지 않게.
+
+몰입 카드를 건너뛰면 명확한 이름과 서로 다른 전문적 말투를 고르고, 나중에 바꿀 수 있다고 알려준다. 허구의 참조에서 개인 사실이나 취향을 추론하지 않는다.
+
+## 실행학교 수강생이면
+
+- 카드 01·02 답 대신 `my-work-map.md`(업무 지도)가 있으면 그 상위 3개 업무를 읽고 "이 중 첫 목표는 무엇인가요?"로 줄여 묻는다.
+- 카드 05에서 "비서 이름"을 꼭 받는다 — 1주차 발표에서 소개할 이름이다.

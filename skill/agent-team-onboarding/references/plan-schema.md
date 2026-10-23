@@ -1,6 +1,6 @@
-# Approved plan JSON
+# 승인된 계획 JSON
 
-The helper accepts one UTF-8 JSON object. Strings are plain text, not Markdown. Required fields are below. No secrets or credentials. IDs use lower-case letters, digits, and hyphens, beginning with a letter. The team ID names a new team folder; agent IDs must be globally unused in the target OpenClaw profile.
+스크립트는 UTF-8 JSON 객체 하나를 받는다. 문자열은 마크다운이 아닌 평문. 비밀값·자격증명 금지(스크립트가 토큰/비밀번호 패턴을 발견하면 거부한다). ID는 소문자·숫자·하이픈, 영문자로 시작. `team.id`는 새 팀 폴더 이름이고, 에이전트 ID는 대상 OpenClaw 프로필 안에서 아직 없어야 한다.
 
 ```json
 {
@@ -8,56 +8,75 @@ The helper accepts one UTF-8 JSON object. Strings are plain text, not Markdown. 
   "team": {
     "id": "sample-team",
     "name": "Sample Team",
-    "organization": "A small education business",
-    "product": "Online workshops",
-    "audience": "New business owners",
-    "objective": "Launch the first workshop",
-    "deadline": "Undecided",
-    "successCriteria": ["A reviewed workshop outline is ready"],
-    "constraints": ["Use existing tools", "No external sends without approval"],
+    "organization": "작은 교육 사업",
+    "product": "온라인 워크숍",
+    "audience": "초보 사업자",
+    "objective": "첫 워크숍 런칭",
+    "deadline": "미정",
+    "successCriteria": ["검토된 워크숍 개요가 준비됨"],
+    "constraints": ["기존 도구 사용", "승인 없이 외부 발송 금지"],
     "tools": ["OpenClaw"],
-    "userName": "Owner",
-    "language": "English",
-    "relationshipStyle": "Warm, direct colleagues"
+    "userName": "대표님",
+    "language": "한국어",
+    "relationshipStyle": "따뜻하고 직설적인 동료"
   },
   "agents": [
     {
       "id": "sample-team-lead",
-      "name": "Mira",
+      "name": "미라",
       "emoji": "🧭",
-      "archetype": "Calm expedition guide",
-      "role": "Coordinator",
-      "mission": "Turn the workshop goal into a reviewed plan and coordinate specialists",
-      "whyNow": "One owner is needed to keep discovery and drafting aligned",
-      "addressUser": "Owner",
-      "traits": ["Clear", "Curious", "Dependable"],
-      "counterTraits": ["Not bossy", "Not vague", "Not overconfident"],
+      "archetype": "차분한 원정 가이드",
+      "role": "총괄",
+      "mission": "워크숍 목표를 검토된 계획으로 바꾸고 전문가를 조율",
+      "whyNow": "탐색과 초안을 한 사람이 맞춰야 한다",
+      "addressUser": "대표님",
+      "traits": ["명확함", "호기심", "믿음직함"],
+      "counterTraits": ["군림하지 않음", "두루뭉술하지 않음", "과신하지 않음"],
       "toneExamples": [
-        "Update: The outline is ready for review.",
-        "Disagreement: I recommend a smaller first workshop because ...",
-        "Blocked: The audience is unclear; I checked X and need Y."
+        "보고: 개요 초안이 검토 준비됐습니다.",
+        "반대: 첫 워크숍은 더 작게 가길 권합니다. 이유는 ...",
+        "막힘: 대상이 불분명합니다. X를 확인했고 Y가 필요합니다."
       ],
-      "responsibilities": ["Own the first-week plan", "Review specialist output"],
-      "outOfScope": ["Publish the workshop without approval"],
-      "deliverables": ["Reviewed first-week plan"],
-      "boundaries": ["Ask before external messages or production changes"],
-      "failureProtocol": "Inspect the evidence, retry once if safe, then report the blocker and recovery option.",
+      "responsibilities": ["첫 주 계획 책임", "전문가 산출물 검토"],
+      "outOfScope": ["승인 없이 워크숍 게시"],
+      "deliverables": ["검토된 첫 주 계획"],
+      "boundaries": ["외부 메시지·운영 변경 전에 물어보기"],
+      "failureProtocol": "근거를 확인하고 안전하면 1회 재시도, 그다음 막힌 점과 복구안을 보고.",
       "firstTasks": [
-        { "task": "Draft a one-page workshop brief", "why": "Align the team on the first goal", "doneWhen": "Owner can review audience, promise, and outline" }
+        { "task": "한 장짜리 워크숍 브리프 작성", "why": "첫 목표에 팀을 맞춘다", "doneWhen": "대표님이 대상·약속·개요를 검토할 수 있다" }
       ],
+      "menus": ["tasks", "agents"],
       "coordinator": true
     }
   ]
 }
 ```
 
-For a multi-agent team, include exactly one `"coordinator": true`; other agents use `false` or omit it. One-agent plans may omit it. Optional `model` uses an installed OpenClaw model ID. Optional `avatar` is a workspace-relative image path or URL already supplied by the user; the helper does not generate images. Do not set `avatar` to a nonexistent local file.
+## 필드 규칙
 
-The helper writes a copy of the team goal and roster to each new workspace. It does **not** change channel bindings, cron jobs, default agent, or existing agents. If the user wants to reuse an existing agent, list it in the proposal, but do not include it in this JSON's `agents` array; connecting existing agents requires a separately reviewed config change.
+- 다중 에이전트 팀은 `"coordinator": true`가 **정확히 하나**. 나머지는 `false` 또는 생략. 1인 팀은 생략 가능(자동으로 총괄).
+- `traits`·`counterTraits`·`toneExamples`는 각각 정확히 3개. `firstTasks`는 1~7개.
+- `menus`(선택): 이 에이전트가 담당할 대시보드 메뉴 키 배열. 비워도 된다. `dashboard-builder`가 읽는다.
+- `model`(선택): 설치된 OpenClaw 모델 ID.
+- `avatar`(선택): 다음 중 하나 — `https://` URL, `data:image/...;base64,` URI, 또는 `--avatar-root <dir>` 아래 **이미 존재하는** 이미지의 상대경로. 스크립트는 이미지를 생성하지 않는다. 존재하지 않는 로컬 파일을 가리키면 거부한다.
 
-Commands:
+## 산출물
+
+- 워크스페이스마다 `IDENTITY.md`, `SOUL.md`, `USER.md`, `AGENTS.md`, `TEAM.md`
+- `<teamRoot>/team.json` — 대시보드 빌더용 기계 명세(`version`, `team`, `agents[{id,name,emoji,role,mission,coordinator,menus,firstTasks}]`)
+- `--project-root`를 주면 `<project-root>/team.md` — HIA 조직도(한국어). 기존 파일은 `team.md.bak-<시각>`으로 보관.
+- `<teamRoot>/.provision-log.json` — 이 도구가 만든 에이전트 기록(resume/rollback 근거)
+- 채널 바인딩, 크론, 기본 에이전트, 기존 에이전트는 **바꾸지 않는다**. 기존 에이전트를 재사용하려면 제안서에만 적고 이 JSON의 `agents`에는 넣지 않는다.
+
+## 명령
 
 ```bash
-node <skill-dir>/scripts/team_setup.mjs preview --plan <plan.json> [--profile <name>] [--workspace-root <absolute-parent-dir>]
-node <skill-dir>/scripts/team_setup.mjs apply --plan <plan.json> --confirmed [--profile <name>] [--workspace-root <absolute-parent-dir>]
+node <skill-dir>/scripts/team_setup.mjs preview  --plan <plan.json> [--profile <name>] [--workspace-root <abs>] [--project-root <abs>] [--avatar-root <abs>]
+node <skill-dir>/scripts/team_setup.mjs apply    --plan <plan.json> --confirmed [같은 옵션] [--resume] [--delegation-mode <mode>]
+node <skill-dir>/scripts/team_setup.mjs status   --plan <plan.json> [--profile] [--workspace-root]
+node <skill-dir>/scripts/team_setup.mjs rollback --plan <plan.json> --confirmed [--profile] [--workspace-root]
 ```
+
+종료코드: `0` 성공 · `1` 검증/실행 오류(stderr에 JSON: `created`, `failedAgent`) · `2` 에이전트는 생성됐으나 위임 설정을 수동으로 해야 함(stdout `delegation.manualSteps`).
+
+`--delegation-mode`는 설치된 OpenClaw가 `subagents.delegationMode`를 지원할 때만 쓴다. 기본은 `allowAgents`만 설정한다.
