@@ -165,7 +165,8 @@ function preflight(plan, options, root) {
   for (const agent of plan.agents) {
     if (existing.has(agent.id) && !(options.resume && log?.created?.includes(agent.id))) collisions.push(agent.id);
   }
-  if (fs.existsSync(teamRoot) && !(options.resume && log)) collisions.push(`workspace: ${teamRoot}`);
+  const emptyPriorRun = log && Array.isArray(log.created) && log.created.length === 0;
+  if (fs.existsSync(teamRoot) && !(options.resume && log) && !emptyPriorRun) collisions.push(`workspace: ${teamRoot}`);
   return { teamRoot, collisions, existing, log };
 }
 
@@ -251,10 +252,15 @@ function apply(plan, options, teamRoot, log) {
     const teamJsonPath = path.join(teamRoot, 'team.json');
     fs.writeFileSync(teamJsonPath, `${JSON.stringify(teamJson(plan), null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
     let projectTeamMd = null;
-    if (options.projectRoot) projectTeamMd = writeProjectTeamMd(options.projectRoot, plan);
+    const warnings = [];
+    if (options.projectRoot) {
+      // 에이전트는 이미 만들어졌으므로 team.md 쓰기 실패는 경고로만 남긴다 (권한 문제 등).
+      try { projectTeamMd = writeProjectTeamMd(options.projectRoot, plan); }
+      catch (error) { warnings.push(`team.md not written to ${options.projectRoot}: ${error.message}. Copy ${teamJsonPath} or fix permissions and re-run with --resume.`); }
+    }
     record.finishedAt = new Date().toISOString();
     writeLog(teamRoot, record);
-    return { created, skipped, teamRoot, teamJson: teamJsonPath, projectTeamMd, delegation, openclawVersion: caps.version, coordinatorId: plan.agents.find(agent => agent.coordinator).id };
+    return { created, skipped, teamRoot, teamJson: teamJsonPath, projectTeamMd, warnings, delegation, openclawVersion: caps.version, coordinatorId: plan.agents.find(agent => agent.coordinator).id };
   } catch (error) {
     error.activeRun = activeRun;
     throw error;
@@ -285,7 +291,7 @@ function rollback(plan, options, teamRoot) {
   for (const agentId of log.created) {
     if (!plan.agents.some(a => a.id === agentId)) continue;
     if (caps.agentsDelete) {
-      try { cli(['agents', 'delete', agentId, '--json'], options); removed.push(agentId); continue; }
+      try { cli(['agents', 'delete', agentId, '--force', '--json'], options); removed.push(agentId); continue; }
       catch (error) { manualSteps.push(`${agentId}: ${error.message}`); }
     } else manualSteps.push(`openclaw 에이전트 ${agentId} 를 수동으로 삭제하세요 (이 버전에 agents delete 가 없음)`);
   }

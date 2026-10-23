@@ -16,6 +16,7 @@ export function cli(args, options = {}) {
     const wrapped = new Error(`openclaw ${args.slice(0, 2).join(' ')} failed: ${detail}`);
     wrapped.code = error.code;
     wrapped.stderr = detail;
+    wrapped.stdout = String(error.stdout || '');
     throw wrapped;
   }
 }
@@ -37,7 +38,7 @@ export function capabilities(options = {}) {
   const agentsHelp = helpLists(['agents', '--help'], options);
   const has = (help, name) => new RegExp(`(^|\\s)${name}(\\s|$)`, 'm').test(help);
   let version = null;
-  try { version = cli(['--version'], options); } catch {}
+  try { version = cli(['--version'], options); } catch (error) { const m = /OpenClaw\s+([0-9][^\s]*)/.exec(String(error.stdout || error.stderr || '')); version = m ? m[1] : null; }
   return {
     version,
     configPatch: has(configHelp, 'patch'),

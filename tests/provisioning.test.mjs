@@ -158,3 +158,20 @@ test('secrets in the plan are refused', () => {
     assert.match(result.stderr, /secret/i);
   } finally { t.cleanup(); }
 });
+
+test('a prior run that created nothing can be re-run without --resume; unwritable project root is a warning', () => {
+  const t = setup({ FAKE_FAIL_AT: 'orchard-pilot-lead' });
+  try {
+    assert.notEqual(t.run(['apply', '--plan', t.planPath, '--confirmed']).status, 0);
+    const env = { ...t.env }; delete env.FAKE_FAIL_AT;
+    const unwritable = path.join(t.temp, 'ro'); fs.mkdirSync(unwritable); fs.chmodSync(unwritable, 0o500);
+    const again = spawnSync(process.execPath, [script, 'apply', '--plan', t.planPath, '--confirmed', '--project-root', unwritable], { encoding: 'utf8', env });
+    fs.chmodSync(unwritable, 0o700);
+    assert.equal(again.status, 0, again.stderr);
+    const result = JSON.parse(again.stdout);
+    assert.deepEqual(result.created, ['orchard-pilot-lead', 'orchard-pilot-analyst']);
+    assert.ok(result.teamJson && fs.existsSync(result.teamJson));
+    assert.equal(result.delegation.method, 'config-patch');
+    assert.ok(result.warnings.some(w => /team\.md not written/.test(w)));
+  } finally { t.cleanup(); }
+});

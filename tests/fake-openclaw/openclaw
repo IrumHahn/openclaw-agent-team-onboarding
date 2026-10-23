@@ -88,7 +88,7 @@ if (group === 'agents') {
   }
   if (sub === 'delete') {
     if (process.env.FAKE_NO_DELETE) die("error: unknown command 'delete'");
-    const id = args[2]; const i = state.agents.findIndex(a => a.id === id); if (i < 0) die('unknown agent');
+    const id = args[2]; if (!args.includes('--force')) die('Non-interactive session. Re-run with --force.'); const i = state.agents.findIndex(a => a.id === id); if (i < 0) die('unknown agent');
     state.agents.splice(i, 1); delete state.config.agents.entries[id]; save(state); out({ ok: true, deleted: id }); process.exit(0);
   }
   die(`error: unknown command '${sub}'`);
