@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+// 테스트 전용 가짜 OpenClaw CLI. 실제 OpenClaw가 없는 환경에서 스크립트를 검증한다.
+// 상태는 $OPENCLAW_STATE_DIR/fake-state.json 에 저장한다.
+// 환경변수 스위치:
+//   FAKE_NO_PATCH=1     → `config patch` 미지원 버전처럼 동작
+//   FAKE_NO_SET=1       → `config set` 미지원
+//   FAKE_FAIL_AT=<id>   → 해당 에이전트 `agents add` 에서 실패
+//   FAKE_NO_DELETE=1    → `agents delete` 미지원
+import fs from 'node:fs';
+import path from 'node:path';
+
+const stateDir = process.env.OPENCLAW_STATE_DIR || path.join(process.env.HOME || '.', '.openclaw');
+const stateFile = path.join(stateDir, 'fake-state.json');
+const configFile = process.env.OPENCLAW_CONFIG_PATH || path.join(stateDir, 'openclaw.json');
+
+function load() {
+  try { return JSON.parse(fs.readFileSync(stateFile, 'utf8')); } catch { return { agents: [], config: { agents: { entries: {} } }, calls: [] }; }
+}
+function save(state) {
+  fs.mkdirSync(stateDir, { recursive: true });
+  fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+}
+function out(value) { process.stdout.write(typeof value === 'string' ? value + '\n' : JSON.stringify(value) + '\n'); }
+function die(message, code = 1) { process.stderr.write(message + '\n'); process.exit(code); }
+function flag(args, name) { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; }
+function getPath(obj, dotted) { return dotted.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj); }
+function setPath(obj, dotted, value) {
+  const keys = dotted.split('.'); let cur = obj;
+  for (const k of keys.slice(0, -1)) { if (typeof cur[k] !== 'object' || cur[k] === null) cur[k] = {}; cur = cur[k]; }
+  cur[keys.at(-1)] = value;
+}
+function deepMerge(target, patch) {
+  for (const [k, v] of Object.entries(patch)) {
+    if (v && typeof v === 'object' && !Array.isArray(v)) { target[k] = deepMerge(typeof target[k] === 'object' && target[k] ? target[k] : {}, v); }
+    else target[k] = v;
+  }
+  return target;
+}
+
+const state = load();
+let args = process.argv.slice(2);
+if (args[0] === '--profile') args = args.slice(2);
+state.calls.push(args.join(' '));
+const [group, sub] = args;
+
+if (group === '--version') { save(state); out('fake-openclaw 2026.10.0'); process.exit(0); }
+if (group === 'skills' && sub === 'list') { save(state); out('bundled: summarize\nmanaged: agent-team-onboarding'); process.exit(0); }
+if (group === 'config') {
+  if (sub === '--help' || sub === undefined) {
+    const cmds = ['file', 'get', 'unset', 'validate'];
+    if (!process.env.FAKE_NO_SET) cmds.push('set');
+    if (!process.env.FAKE_NO_PATCH) cmds.push('patch');
+    save(state); out('Usage: openclaw config [command]\n\nCommands:\n' + cmds.map(c => `  ${c}`).join('\n')); process.exit(0);
+  }
+  if (sub === 'file') { save(state); out(configFile); process.exit(0); }
+  if (sub === 'get') { const v = getPath(state.config, args[2]); save(state); if (v === undefined) die('not found'); out(args.includes('--json') ? v : String(v)); process.exit(0); }
+  if (sub === 'set') {
+    if (process.env.FAKE_NO_SET) die("error: unknown command 'set'");
+    let value = args[3]; try { value = JSON.parse(value); } catch {}
+    setPath(state.config, args[2], value); save(state); out('ok'); process.exit(0);
+  }
+  if (sub === 'patch') {
+    if (process.env.FAKE_NO_PATCH) die("error: unknown command 'patch'");
+    const file = flag(args, '--file'); if (!file) die('--file required');
+    const patch = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!args.includes('--dry-run')) deepMerge(state.config, patch);
+    save(state); out('ok'); process.exit(0);
+  }
+  die(`error: unknown command '${sub}'`);
+}
+if (group === 'agents') {
+  if (sub === 'list') { save(state); out(state.agents); process.exit(0); }
+  if (sub === 'add') {
+    const id = args[2]; const workspace = flag(args, '--workspace');
+    if (!args.includes('--non-interactive') || !workspace) die('non-interactive requires --workspace');
+    if (process.env.FAKE_FAIL_AT === id) { save(state); die(`simulated failure creating ${id}`); }
+    if (state.agents.some(a => a.id === id)) die(`Agent "${id}" already exists.`);
+    state.agents.push({ id, name: id, workspace, identityName: null, identityEmoji: null, model: flag(args, '--model') || null });
+    state.config.agents.entries[id] = { workspace };
+    save(state); out({ agentId: id, workspace, created: true }); process.exit(0);
+  }
+  if (sub === 'set-identity') {
+    const id = flag(args, '--agent'); const agent = state.agents.find(a => a.id === id); if (!agent) die('unknown agent');
+    agent.identityName = flag(args, '--name') || agent.identityName; agent.identityEmoji = flag(args, '--emoji') || agent.identityEmoji;
+    agent.identityTheme = flag(args, '--theme') || null; agent.avatar = flag(args, '--avatar') || null;
+    save(state); out({ ok: true, agentId: id }); process.exit(0);
+  }
+  if (sub === 'delete') {
+    if (process.env.FAKE_NO_DELETE) die("error: unknown command 'delete'");
+    const id = args[2]; const i = state.agents.findIndex(a => a.id === id); if (i < 0) die('unknown agent');
+    state.agents.splice(i, 1); delete state.config.agents.entries[id]; save(state); out({ ok: true, deleted: id }); process.exit(0);
+  }
+  die(`error: unknown command '${sub}'`);
+}
+save(state);
+die(`error: unknown command '${group}'`);

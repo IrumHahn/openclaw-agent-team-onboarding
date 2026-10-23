@@ -6,7 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'interview_draft.mjs');
+const script = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'skill', 'agent-team-onboarding', 'scripts', 'interview_draft.mjs');
 
 function run(args) {
   return spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });

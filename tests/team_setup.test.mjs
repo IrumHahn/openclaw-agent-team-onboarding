@@ -7,7 +7,8 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
-const script = path.join(directory, '..', 'scripts', 'team_setup.mjs');
+const script = path.join(directory, '..', 'skill', 'agent-team-onboarding', 'scripts', 'team_setup.mjs');
+const fakeBin = path.join(directory, 'fake-openclaw', 'openclaw');
 const fixture = JSON.parse(fs.readFileSync(path.join(directory, 'fixture.json'), 'utf8'));
 
 function run(args, env) {
@@ -19,7 +20,7 @@ test('interview plan previews without mutation, provisions a coordinated team, a
   const stateDir = path.join(temp, 'state');
   const planPath = path.join(temp, 'plan.json');
   fs.writeFileSync(planPath, JSON.stringify(fixture));
-  const env = { ...process.env, OPENCLAW_STATE_DIR: stateDir, OPENCLAW_CONFIG_PATH: path.join(stateDir, 'openclaw.json') };
+  const env = { ...process.env, OPENCLAW_BIN: fakeBin, OPENCLAW_STATE_DIR: stateDir, OPENCLAW_CONFIG_PATH: path.join(stateDir, 'openclaw.json') };
   try {
     const preview = run(['preview', '--plan', planPath], env);
     assert.equal(preview.status, 0, preview.stderr);
@@ -42,10 +43,10 @@ test('interview plan previews without mutation, provisions a coordinated team, a
     assert.match(fs.readFileSync(path.join(leadWorkspace, 'AGENTS.md'), 'utf8'), /Initial task proposals/);
     assert.equal(fs.existsSync(path.join(leadWorkspace, 'BOOTSTRAP.md')), false);
 
-    const roster = JSON.parse(execFileSync('openclaw', ['agents', 'list', '--json'], { encoding: 'utf8', env }));
+    const roster = JSON.parse(execFileSync(fakeBin, ['agents', 'list', '--json'], { encoding: 'utf8', env }));
     assert.equal(roster.filter(agent => result.created.includes(agent.id)).length, 2);
     assert.equal(roster.find(agent => agent.id === 'orchard-pilot-lead').identityName, 'Mara');
-    const delegation = JSON.parse(execFileSync('openclaw', ['config', 'get', 'agents.entries.orchard-pilot-lead.subagents', '--json'], { encoding: 'utf8', env }));
+    const delegation = JSON.parse(execFileSync(fakeBin, ['config', 'get', 'agents.entries.orchard-pilot-lead.subagents', '--json'], { encoding: 'utf8', env }));
     assert.deepEqual(delegation.allowAgents, ['orchard-pilot-analyst']);
     assert.equal(delegation.delegationMode, 'prefer');
 
@@ -65,7 +66,7 @@ test('invalid plans fail before agent creation', () => {
   invalid.agents[1].id = invalid.agents[0].id;
   fs.writeFileSync(planPath, JSON.stringify(invalid));
   try {
-    const result = run(['preview', '--plan', planPath], process.env);
+    const result = run(['preview', '--plan', planPath], { ...process.env, OPENCLAW_BIN: fakeBin, OPENCLAW_STATE_DIR: temp });
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /agent IDs must be unique/);
   } finally {
