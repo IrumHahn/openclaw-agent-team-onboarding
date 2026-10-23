@@ -202,7 +202,7 @@ function wireDelegation(plan, options, teamRoot, caps) {
   }
   if (caps.configSet) {
     try {
-      for (const [agentId, entry] of Object.entries(entries)) cli(['config', 'set', `agents.entries.${agentId}.subagents`, JSON.stringify(entry.subagents)], options);
+      for (const [agentId, entry] of Object.entries(entries)) cli(['config', 'set', `agents.entries.${agentId}.subagents`, JSON.stringify(entry.subagents), '--strict-json'], options); // 2026.10.x: JSON 값은 --strict-json 필요
       return { method: 'config-set', patchFile: patchPath, manualSteps: [], attempts };
     } catch (error) { attempts.push(`config set: ${error.message}`); }
   }

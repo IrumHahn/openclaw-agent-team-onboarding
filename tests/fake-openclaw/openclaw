@@ -56,7 +56,7 @@ if (group === 'config') {
   if (sub === 'get') { const v = getPath(state.config, args[2]); save(state); if (v === undefined) die('not found'); out(args.includes('--json') ? v : String(v)); process.exit(0); }
   if (sub === 'set') {
     if (process.env.FAKE_NO_SET) die("error: unknown command 'set'");
-    let value = args[3]; try { value = JSON.parse(value); } catch {}
+    let value = args[3]; if (args.includes('--strict-json')) value = JSON.parse(value); else { try { value = JSON.parse(value); } catch {} }
     setPath(state.config, args[2], value); save(state); out('ok'); process.exit(0);
   }
   if (sub === 'patch') {
