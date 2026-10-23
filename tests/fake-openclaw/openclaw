@@ -69,6 +69,7 @@ if (group === 'config') {
   die(`error: unknown command '${sub}'`);
 }
 if (group === 'agents') {
+  if (sub === '--help' || sub === undefined) { const cmds = ['list', 'add', 'set-identity']; if (!process.env.FAKE_NO_DELETE) cmds.push('delete'); save(state); out('Usage: openclaw agents [command]\n\nCommands:\n' + cmds.map(c => `  ${c}`).join('\n')); process.exit(0); }
   if (sub === 'list') { save(state); out(state.agents); process.exit(0); }
   if (sub === 'add') {
     const id = args[2]; const workspace = flag(args, '--workspace');

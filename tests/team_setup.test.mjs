@@ -33,7 +33,7 @@ test('interview plan previews without mutation, provisions a coordinated team, a
     assert.notEqual(missingConsent.status, 0);
     assert.equal(fs.existsSync(previewJson.teamRoot), false);
 
-    const applied = run(['apply', '--plan', planPath, '--confirmed'], env);
+    const applied = run(['apply', '--plan', planPath, '--confirmed', '--delegation-mode', 'prefer'], env);
     assert.equal(applied.status, 0, applied.stderr);
     const result = JSON.parse(applied.stdout);
     assert.deepEqual(result.created, ['orchard-pilot-lead', 'orchard-pilot-analyst']);
