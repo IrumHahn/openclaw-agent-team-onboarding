@@ -1,9 +1,20 @@
 ---
 name: agent-team-onboarding
-description: 사용자의 조직·첫 목표·제약·성공 기준을 인터뷰해 필요한 최소 에이전트 팀을 제안하고, 승인 후 OpenClaw 에이전트를 생성·연결하고 첫 과제를 제안한다. "에이전트 팀 만들어줘", "어떤 에이전트를 만들어야 해", "팀 구성해줘", "직원 뽑아줘" 또는 "help me set up an agent team", "which OpenClaw agents should I create" 같은 요청에 사용. 이미 있는 에이전트를 지우거나 고치는 용도가 아님.
+description: 사용자의 조직·첫 목표·제약·성공 기준을 인터뷰해 필요한 최소 에이전트 팀을 제안하고, 승인 후 기본 에이전트(main)를 총괄로 바꾸고 전문가를 생성·연결하고 첫 과제를 제안한다. "에이전트 팀 만들어줘", "어떤 에이전트를 만들어야 해", "팀 구성해줘", "직원 뽑아줘", "help me set up an agent team" 같은 요청에 사용. "내 업무 지도 만들어줘", "업무 지도", "my work map" 요청이면 에이전트를 만들지 않는 업무 지도 모드(my-work-map.md 작성)로 동작. 이미 있는 에이전트를 지우는 용도가 아님.
 ---
 
 # Agent Team Onboarding — 목표에 맞는 최소 팀 만들기
+
+## 모드 고르기 (가장 먼저)
+
+| 요청 | 모드 | 하는 일 |
+|---|---|---|
+| "내 업무 지도 만들어줘", "업무 지도", "my work map" | **업무 지도 모드** | 5문항 인터뷰 → main 워크스페이스에 `my-work-map.md`. 에이전트·성격·설정은 **절대** 바꾸지 않는다. `references/work-map.md`만 따르고 아래 0~6단계는 하지 않는다. |
+| "에이전트 팀 만들어줘", "팀 구성해줘" 등 | **팀 모드** | 아래 0~6단계 |
+
+실행학교 1주차: 과제1(월~화)은 업무 지도 모드, 과제2(화~수)는 팀 모드다. 과제1에서는 페르소나를 만들지 않는다.
+
+---
 
 이 스킬은 **정해진 4인 프리셋을 찍어내는 도구가 아니다.** 사용자의 첫 목표에서 거꾸로 필요한 역할을 고르고, 사용자가 승인한 팀만 만든다. 아래 6단계를 순서대로 따른다. 중간에 끊긴 대화는 저장된 초안에서 이어 간다 — 이미 답한 질문을 다시 묻지 않는다.
 
@@ -21,10 +32,13 @@ description: 사용자의 조직·첫 목표·제약·성공 기준을 인터뷰
 1. `references/interview.md`, `references/recommendation-rules.md`, `references/plan-schema.md`를 읽는다.
 2. 실행: `openclaw --version`, `openclaw agents list --json`, `openclaw config file`.
    - CLI가 없거나 에이전트 관리 권한이 없으면 **여기서 멈추고** 막힌 이유와 해결 방법(설치 확인, 게이트웨이 실행 여부)을 알려준다. 팀을 만들었다고 말하지 않는다.
-3. 이미 있는 에이전트가 목표를 일부 맡을 수 있으면 **재사용을 먼저 제안**한다. 기존 에이전트·워크스페이스·채널 연결·설정은 절대 덮어쓰거나 지우지 않는다.
+3. **기본 에이전트(`isDefault: true`, 보통 `main`)를 확인한다.** OpenClaw에는 처음부터 main이 있고 시스템·하트비트도 main이 맡는다. 그래서 **총괄은 새로 만들지 않고 main을 총괄로 바꾸는 것이 기본**이다(계획 JSON에서 총괄 `id`를 `main`으로). 새 총괄을 따로 만들면 이름 없는 main이 조직도에 남는다 — 이것이 가장 흔한 실수다.
+   - main의 `identityName`이 없거나 `main`이면 "이름 없는 기본 상태" → 그대로 총괄로 채택한다(과제2의 기본 경로).
+   - main에 이미 이름·성격이 있으면(예: 「드림」) 사용자에게 묻는다: "main(드림)을 이번 총괄로 바꿀까요, 아니면 드림은 그대로 두고 총괄을 따로 만들까요?" 따로 두기로 하면 preview에 경고만 나오고 진행된다(`--keep-default` 불필요).
+   - 다른 기존 에이전트가 목표를 일부 맡을 수 있으면 재사용을 먼저 제안한다. main 외의 기존 에이전트·채널 연결·설정은 덮어쓰거나 지우지 않는다.
 4. 실행학교 수강생 환경이면 워크스페이스에 `my-work-map.md`(업무 지도)가 있는지 확인하고, 있으면 읽어 둔다.
 
-**완료 기준:** OpenClaw 버전, 현재 에이전트 목록, 초안 저장 위치를 안다.
+**완료 기준:** OpenClaw 버전, 현재 에이전트 목록, main이 이름 없는 상태인지, 초안 저장 위치를 안다.
 
 ## 2. 인터뷰 (핵심 4장 + 몰입 2장 필수, 외형 1장 선택)
 
@@ -54,6 +68,8 @@ node <skill-dir>/scripts/interview_draft.mjs show --file <draft.json>
 
 - 팀 사명, 첫 성공 기준, 제약
 - 에이전트마다: 이름 · 역할 · 성격/이모지 · **왜 지금 필요한가** · 범위 · 첫 산출물 · 첫 과제 · (실행학교) 담당할 대시보드 메뉴 후보
+- **이름은 사용자 언어로 표기한다**(한국어 사용자면 「루미」, 「노바」). ID는 내부용 로마자(`main`, `nova`)이고 화면에는 이름이 보인다고 설명한다.
+- 총괄: "기존 main을 「루미」로 바꿉니다(새로 만들지 않음)"라고 명시한다. 바뀌는 것(IDENTITY.md·SOUL.md는 백업 후 교체, AGENTS.md·USER.md는 팀 구역만 추가, 화면 이름)과 **그대로 두는 것**(`my-work-map.md`, HIA 블록, 대화 기록, 채널 연결, 기타 파일)을 같이 보여준다.
 - 재사용하는 기존 에이전트 / 새로 만드는 것 / 바꾸지 않는 것
 - 승인 경계: 외부 메시지·구매·게시·삭제·운영 변경·예약 실행은 별도 승인 전까지 꺼짐
 
@@ -65,13 +81,17 @@ node <skill-dir>/scripts/interview_draft.mjs show --file <draft.json>
 
 승인된 제안을 `references/plan-schema.md` 형식으로 JSON 파일에 쓴다(이번 실행용 로컬 경로). 비밀값 금지. 에이전트마다 긍정 특성 3·대비 특성 3·말투 예시 3·경계·실패 시 행동·첫 과제를 넣는다. 외형을 건너뛰었으면 이모지와 한 줄 모티프만 쓰고 아바타 이미지를 지어내지 않는다.
 
+- 총괄 `id` = 기본 에이전트 ID(`main`). 전문가 `id`는 새 로마자 ID.
+- `name`은 사용자 언어 표기(한국어 팀이면 한글 필수 — 스크립트가 거부한다).
+- `archetype`은 화면 카드에 이름 아래 그대로 보이는 **성격 한 줄**(60자 이내). "실제 아바타 이미지 없음" 같은 메모를 넣지 않는다.
+
 ```bash
 node <skill-dir>/scripts/team_setup.mjs preview --plan <plan.json>
 ```
 
 옵션: 프로필이 있으면 `--profile <name>`, 저장 위치를 정했으면 `--workspace-root <절대경로>`, 실행학교라면 `--project-root <HIA 프로젝트 루트>`(여기에 `team.md` 조직도를 쓴다), 아바타 파일을 쓰면 `--avatar-root <디렉터리>`.
 
-충돌·검증 오류를 전부 해결한 뒤 진행한다. 미리보기 결과(새 에이전트 ID, 워크스페이스 위치)를 쉬운 말로 요약한다.
+충돌·검증 오류를 전부 해결한 뒤 진행한다. `collisions`에 "default agent "main" has no persona"가 나오면 총괄 ID를 `main`으로 고친다(사용자가 명시적으로 main을 따로 두겠다고 한 경우에만 `--keep-default`). `warnings`는 사용자에게 그대로 전한다. 미리보기 결과(`adoptsDefault`, 새 에이전트 ID, 워크스페이스 위치)를 쉬운 말로 요약한다.
 
 **완료 기준:** preview가 성공하고 승인된 제안과 일치하며 충돌이 없다.
 
@@ -83,16 +103,20 @@ node <skill-dir>/scripts/team_setup.mjs preview --plan <plan.json>
 node <skill-dir>/scripts/team_setup.mjs apply --plan <plan.json> --confirmed [--profile ...] [--workspace-root ...] [--project-root ...]
 ```
 
-스크립트가 하는 일: 새 워크스페이스에 `IDENTITY.md`·`SOUL.md`·`USER.md`·`AGENTS.md`·`TEAM.md` 작성 → `openclaw agents add` → `set-identity` → 총괄→전문가 위임 허용 목록 설정 → `team.json`(대시보드용)·`team.md`(HIA 조직도) 저장. 채널 연결·예약 실행·외부 발송·기본 에이전트 변경은 하지 않는다.
+스크립트가 하는 일:
+- 총괄(main): 기존 워크스페이스에서 `IDENTITY.md`·`SOUL.md`·`TEAM.md`를 `*.bak-onboarding-<시각>`으로 보관 후 새로 쓰고, `AGENTS.md`·`USER.md`에는 `<!-- agent-team-onboarding:start/end -->` 구역만 넣는다(HIA 블록·`my-work-map.md`·다른 파일은 그대로) → `set-identity`.
+- 전문가: 새 워크스페이스에 페르소나 파일 → `openclaw agents add` → `set-identity`.
+- 모두: 설정 `agents.entries.<id>.name`을 한글 이름으로(이걸 안 하면 화면 카드에 `nova` 같은 ID가 보인다) + 총괄→전문가 위임 허용 목록 → `team.json`(대시보드용)·`team.md`(HIA 조직도) 저장.
+- 채널 연결·예약 실행·외부 발송·기본 에이전트 지정 변경은 하지 않는다. main을 지우지 않는다.
 
-위임 설정은 설치된 OpenClaw 버전에 따라 `config patch` → `config set` → **수동 안내** 순으로 시도한다. 종료코드 2와 함께 `delegation.manualSteps`가 나오면 에이전트는 만들어진 것이고 위임 설정만 사람이 해야 한다 — 그 단계를 그대로 사용자에게 전달한다.
+이름·위임 설정은 설치된 OpenClaw 버전에 따라 `config patch` → `config set` → **수동 안내** 순으로 시도한다. 종료코드 2와 함께 `delegation.manualSteps`가 나오면 에이전트는 만들어진 것이고 이름·위임 설정만 사람이 해야 한다 — 그 단계를 그대로 사용자에게 전달한다.
 
-검증: `openclaw agents list --json`, 생성된 파일, 총괄의 `subagents.allowAgents`(2명 이상일 때). 어떤 단계가 실패하면 **어떤 에이전트까지 만들어졌고 어디서 멈췄는지** 정확히 보고한다. 이어서 하려면:
+검증: `openclaw agents list --json`에서 **main 외에 이름 없는 에이전트가 남지 않았는지**, 각 `name`이 한글인지, 생성된 파일, 총괄의 `subagents.allowAgents`(2명 이상일 때). 어떤 단계가 실패하면 **어떤 에이전트까지 만들어졌고 어디서 멈췄는지** 정확히 보고한다. 이어서 하려면:
 
 ```bash
 node <skill-dir>/scripts/team_setup.mjs status --plan <plan.json>          # 무엇이 만들어졌는지
 node <skill-dir>/scripts/team_setup.mjs apply --plan <plan.json> --confirmed --resume   # 남은 것만
-node <skill-dir>/scripts/team_setup.mjs rollback --plan <plan.json> --confirmed         # 이 도구가 만든 것만 제거
+node <skill-dir>/scripts/team_setup.mjs rollback --plan <plan.json> --confirmed         # 이 도구가 만든 것만 제거, main은 원래 파일·이름으로 복원(삭제 안 함)
 ```
 
 부분 결과를 말없이 지우거나 그 위에 다시 실행하지 않는다.
@@ -101,7 +125,7 @@ node <skill-dir>/scripts/team_setup.mjs rollback --plan <plan.json> --confirmed 
 
 ## 6. 첫 주 넘겨주기
 
-승인된 계획의 `firstTasks`로 7일 시작 계획을 짧게 제시한다: 담당 · 왜 지금 · 산출물 · 완료 조건. 총괄에게 맡길 안전한 내부 과제 1개를 권한다. **제안한 일과 끝난 일을 구분**한다 — 실제 과제가 돌기 전에는 에이전트가 일하고 있다고 말하지 않는다. 총괄은 OpenClaw 에이전트 화면에서 열 수 있고, 채팅 채널 연결은 따로 해야 한다고 알려준다.
+승인된 계획의 `firstTasks`로 7일 시작 계획을 짧게 제시한다: 담당 · 왜 지금 · 산출물 · 완료 조건. 총괄에게 맡길 안전한 내부 과제 1개를 권한다. **제안한 일과 끝난 일을 구분**한다 — 실제 과제가 돌기 전에는 에이전트가 일하고 있다고 말하지 않는다. 총괄은 OpenClaw 에이전트 화면에서 열 수 있다. main을 총괄로 바꿨다면 main에 이미 연결된 채널·대화는 그대로 이어지고 새 세션부터 새 이름·성격으로 답한다. 전문가의 채팅 채널 연결은 따로 해야 한다고 알려준다.
 
 실행학교 수강생이면 마지막에: "조직도는 `team.md`에 저장했습니다. 다음은 **dashboard-builder** 스킬에 '대시보드 만들어줘'라고 말하면 이 팀이 보이는 내 AI 오피스를 만듭니다."
 

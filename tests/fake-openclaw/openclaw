@@ -6,6 +6,8 @@
 //   FAKE_NO_SET=1       → `config set` 미지원
 //   FAKE_FAIL_AT=<id>   → 해당 에이전트 `agents add` 에서 실패
 //   FAKE_NO_DELETE=1    → `agents delete` 미지원
+//   FAKE_MAIN=bare|persona + FAKE_MAIN_WORKSPACE=<dir>
+//                       → 설치 직후처럼 기본 에이전트 main 이 있는 상태로 시작 (persona 면 이름 「드림」)
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -14,7 +16,16 @@ const stateFile = path.join(stateDir, 'fake-state.json');
 const configFile = process.env.OPENCLAW_CONFIG_PATH || path.join(stateDir, 'openclaw.json');
 
 function load() {
-  try { return JSON.parse(fs.readFileSync(stateFile, 'utf8')); } catch { return { agents: [], config: { agents: { entries: {} } }, calls: [] }; }
+  try { return JSON.parse(fs.readFileSync(stateFile, 'utf8')); } catch {
+    const fresh = { agents: [], config: { agents: { entries: {} } }, calls: [] };
+    if (process.env.FAKE_MAIN) {
+      const workspace = process.env.FAKE_MAIN_WORKSPACE || path.join(stateDir, 'workspace');
+      const persona = process.env.FAKE_MAIN === 'persona';
+      fresh.agents.push({ id: 'main', name: 'main', workspace, identityName: persona ? '드림' : null, identityEmoji: persona ? '💭' : null, isDefault: true });
+      fresh.config.agents.entries.main = { name: 'main', workspace };
+    }
+    return fresh;
+  }
 }
 function save(state) {
   fs.mkdirSync(stateDir, { recursive: true });
@@ -59,6 +70,7 @@ if (group === 'config') {
     let value = args[3]; if (args.includes('--strict-json')) value = JSON.parse(value); else { try { value = JSON.parse(value); } catch {} }
     setPath(state.config, args[2], value); save(state); out('ok'); process.exit(0);
   }
+  if (sub === 'unset') { const keys = args[2].split('.'); const parent = getPath(state.config, keys.slice(0, -1).join('.')); if (parent) delete parent[keys.at(-1)]; save(state); out('ok'); process.exit(0); }
   if (sub === 'patch') {
     if (process.env.FAKE_NO_PATCH) die("error: unknown command 'patch'");
     const file = flag(args, '--file'); if (!file) die('--file required');
@@ -70,7 +82,8 @@ if (group === 'config') {
 }
 if (group === 'agents') {
   if (sub === '--help' || sub === undefined) { const cmds = ['list', 'add', 'set-identity']; if (!process.env.FAKE_NO_DELETE) cmds.push('delete'); save(state); out('Usage: openclaw agents [command]\n\nCommands:\n' + cmds.map(c => `  ${c}`).join('\n')); process.exit(0); }
-  if (sub === 'list') { save(state); out(state.agents); process.exit(0); }
+  // 실제 CLI 처럼 name 은 설정(agents.entries.<id>.name)에서 읽는다.
+  if (sub === 'list') { save(state); out(state.agents.map(a => ({ ...a, name: state.config.agents.entries[a.id]?.name ?? a.name }))); process.exit(0); }
   if (sub === 'add') {
     const id = args[2]; const workspace = flag(args, '--workspace');
     if (!args.includes('--non-interactive') || !workspace) die('non-interactive requires --workspace');

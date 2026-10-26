@@ -43,6 +43,7 @@ export function capabilities(options = {}) {
     version,
     configPatch: has(configHelp, 'patch'),
     configSet: has(configHelp, 'set'),
+    configUnset: has(configHelp, 'unset'),
     agentsDelete: has(agentsHelp, 'delete'),
   };
 }

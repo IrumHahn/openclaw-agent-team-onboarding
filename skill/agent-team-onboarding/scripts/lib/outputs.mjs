@@ -36,6 +36,23 @@ export function agentsMarkdown(plan, agent) {
   return `# AGENTS.md - ${agent.name}'s operating contract\n\nAt session start, read SOUL.md, USER.md, and TEAM.md. Act within the first goal; propose work based on evidence, not a generic calendar.\n\n## Mission and scope\n\n${agent.mission}\n\nWhy this agent exists now: ${agent.whyNow}\n\nResponsibilities:\n${bullets(agent.responsibilities)}\n\nOut of scope:\n${bullets(agent.outOfScope)}\n\nExpected deliverables:\n${bullets(agent.deliverables)}\n${menuLine}\n## Teamwork\n\n${coordination}\n\n## Initial task proposals (not yet completed or scheduled)\n\n${taskLines}\n\n## Operating rules\n\n- Recommend the next useful internal action tied to the team's objective and measurable success criteria. State why it matters and what completion looks like.\n- Distinguish proposed, in progress, blocked, and completed work. Do not execute external or irreversible tasks merely because they appear above.\n- External messages, purchases, publishing, deletion, production changes, and recurring automation need the user's specific authorization.\n- If a tool, credential, or permission is missing, report the blocker and a safe next step; do not claim a behavioral instruction is a technical access restriction.\n`;
 }
 
+// 기본 에이전트(main)를 총괄로 채택할 때 AGENTS.md·USER.md 는 덮어쓰지 않고 이 구역만 넣고 뺀다.
+// HIA 블록(<!-- HIA:START -->) 등 다른 내용은 건드리지 않는다.
+const BLOCK_START = '<!-- agent-team-onboarding:start -->';
+const BLOCK_END = '<!-- agent-team-onboarding:end -->';
+const BLOCK_PATTERN = new RegExp(`\\n?${BLOCK_START}[\\s\\S]*?${BLOCK_END}\\n?`);
+
+export function upsertManagedBlock(text, content) {
+  const block = `${BLOCK_START}\n${content.trim().replace(/^# /, '## ')}\n${BLOCK_END}`;
+  if (text.includes(BLOCK_START)) return text.replace(BLOCK_PATTERN, match => `${match.startsWith('\n') ? '\n' : ''}${block}\n`);
+  const separator = text === '' ? '' : text.endsWith('\n') ? '\n' : '\n\n';
+  return `${text}${separator}${block}\n`;
+}
+
+export function removeManagedBlock(text) {
+  return text.replace(BLOCK_PATTERN, '');
+}
+
 // dashboard-builder 가 읽는 기계용 팀 명세.
 export function teamJson(plan) {
   return {
@@ -50,6 +67,7 @@ export function teamJson(plan) {
       id: agent.id, name: agent.name, emoji: agent.emoji, role: agent.role,
       mission: agent.mission, coordinator: agent.coordinator, menus: agent.menus,
       firstTasks: agent.firstTasks,
+      ...(agent.id === plan.adoptedId ? { isDefault: true } : {}),
     })),
   };
 }
@@ -57,9 +75,22 @@ export function teamJson(plan) {
 // HIA 프로젝트 루트용 한국어 조직도(team.md). 사람이 읽는 문서.
 export function teamMdKorean(plan) {
   const { team, agents } = plan;
-  const rows = agents.map(a => `| ${a.emoji} ${a.name} | \`${a.id}\` | ${a.coordinator ? '총괄' : '전문'} · ${a.role} | ${a.mission} | ${a.menus.length ? a.menus.join(', ') : '(미정)'} |`).join('\n');
+  const rows = agents.map(a => `| ${a.emoji} ${a.name} | \`${a.id}\`${a.id === plan.adoptedId ? ' (기본 에이전트)' : ''} | ${a.coordinator ? '총괄' : '전문'} · ${a.role} | ${a.mission} | ${a.menus.length ? a.menus.join(', ') : '(미정)'} |`).join('\n');
   const tasks = agents.flatMap(a => a.firstTasks.map(t => `- **${a.name}** — ${t.task} (완료 기준: ${t.doneWhen})`)).join('\n');
   return `# 팀 조직도 — ${team.name}\n\n- 생성: ${today()} · agent-team-onboarding 스킬\n- 목표: ${team.objective}\n- 성공 기준:\n${bullets(team.successCriteria)}\n- 상태: 에이전트 등록 완료(OpenClaw). 채널 연결·자동 실행은 아직 설정하지 않음.\n\n## 직원\n\n| 이름 | 에이전트 ID | 역할 | 임무 | 담당 메뉴(대시보드) |\n|---|---|---|---|---|\n${rows}\n\n## 첫 과제 (제안 상태 — 아직 실행하지 않음)\n\n${tasks}\n\n## 다음 단계\n\n1. 대시보드: \`dashboard-builder\` 스킬에 "대시보드 만들어줘"라고 말하면 이 조직도를 읽어 메뉴와 담당을 채운다.\n2. 담당 메뉴가 \`(미정)\`인 직원은 대시보드 설정에서 메뉴를 지정하거나, 필요한 메뉴에 새 직원을 추가한다.\n`;
+}
+
+// 과제1 업무 지도(my-work-map.md). 표 칸이 깨지지 않게 | 와 줄바꿈을 정리한다.
+const cell = value => String(value).replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+
+export function workMapMarkdown(map) {
+  const top = map.tasks.map((task, index) => ({ task, index }))
+    .sort((a, b) => b.task.delegation - a.task.delegation || a.index - b.index)
+    .slice(0, 3).map(item => item.task);
+  const topLines = top.map((t, i) => `${i + 1}. **${t.name}** — ${t.frequency} · ${t.duration} · 위임 희망도 ${t.delegation} · 연결: ${t.connections}`).join('\n');
+  const rows = map.tasks.map(t => `| ${cell(t.name)} | ${cell(t.frequency)} | ${cell(t.duration)} | ${t.delegation} | ${cell(t.connections)} |`).join('\n');
+  const a = map.answers;
+  return `# 내 업무 지도${map.userName ? ` — ${map.userName}` : ''}\n\n- 작성: ${today()} · agent-team-onboarding (업무 지도 모드)\n- 이 파일은 과제2 팀 만들기에서 그대로 읽습니다. 고쳐도 됩니다.\n\n## 상위 3개 업무 (위임 희망도 순)\n\n${topLines}\n\n## 업무 표\n\n| 업무명 | 빈도 | 소요시간 | 위임 희망도(1~5) | 필요한 연결 |\n|---|---|---|---|---|\n${rows}\n\n## 인터뷰 답\n\n- 하는 일: ${a.work}\n- 반복 업무: ${a.recurring}\n- 시간 많이 드는 일: ${a.timeSink}\n- 맡기고 싶은 일: ${a.delegate}\n- 절대 맡기기 싫은 일: ${a.neverDelegate}\n\n## 다음 단계\n\n과제2에서 "에이전트 팀 만들어줘"라고 하면 이 지도의 상위 3개 업무로 총괄(main)과 팀원을 제안합니다. 지금은 에이전트·성격·설정을 바꾸지 않았습니다.\n`;
 }
 
 function backupIfExists(filePath) {

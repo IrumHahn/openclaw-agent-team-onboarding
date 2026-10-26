@@ -1,6 +1,6 @@
 # 승인된 계획 JSON
 
-스크립트는 UTF-8 JSON 객체 하나를 받는다. 문자열은 마크다운이 아닌 평문. 비밀값·자격증명 금지(스크립트가 토큰/비밀번호 패턴을 발견하면 거부한다). ID는 소문자·숫자·하이픈, 영문자로 시작. `team.id`는 새 팀 폴더 이름이고, 에이전트 ID는 대상 OpenClaw 프로필 안에서 아직 없어야 한다.
+스크립트는 UTF-8 JSON 객체 하나를 받는다. 문자열은 마크다운이 아닌 평문. 비밀값·자격증명 금지(스크립트가 토큰/비밀번호 패턴을 발견하면 거부한다). ID는 소문자·숫자·하이픈, 영문자로 시작. `team.id`는 새 팀 폴더 이름이고, 에이전트 ID는 대상 OpenClaw 프로필 안에서 아직 없어야 한다. **예외: 총괄 ID가 기본 에이전트 ID(`main`)이면 새로 만들지 않고 main을 총괄로 채택한다** — 이것이 기본 경로다.
 
 ```json
 {
@@ -22,7 +22,7 @@
   },
   "agents": [
     {
-      "id": "sample-team-lead",
+      "id": "main",
       "name": "미라",
       "emoji": "🧭",
       "archetype": "차분한 원정 가이드",
@@ -54,6 +54,9 @@
 
 ## 필드 규칙
 
+- **총괄 = 기본 에이전트.** 총괄의 `id`는 `openclaw agents list --json`에서 `isDefault: true`인 에이전트 ID(보통 `main`). 이름 없는 main이 있는데 총괄을 새 ID로 만들면 preview가 `collisions`로 막는다(사용자가 main을 따로 두겠다고 명시했을 때만 `--keep-default`). main에 이미 이름이 있으면 경고만 낸다.
+- **`name`은 화면 표기, `id`는 내부 식별자.** `team.language`가 한국어면 `name`에 한글이 있어야 한다(`{"id": "nova", "name": "노바"}`). 스크립트가 설정 `agents.entries.<id>.name`에도 이 이름을 넣어 화면 카드에 ID 대신 이름이 보이게 한다.
+- `archetype`은 화면 카드에 이름 아래 보이는 성격 한 줄(60자 이내). "아바타 이미지 없음"·"미정" 같은 메모를 넣으면 거부한다.
 - 다중 에이전트 팀은 `"coordinator": true`가 **정확히 하나**. 나머지는 `false` 또는 생략. 1인 팀은 생략 가능(자동으로 총괄).
 - `traits`·`counterTraits`·`toneExamples`는 각각 정확히 3개. `firstTasks`는 1~7개.
 - `menus`(선택): 이 에이전트가 담당할 대시보드 메뉴 키 배열. 비워도 된다. `dashboard-builder`가 읽는다.
@@ -62,21 +65,24 @@
 
 ## 산출물
 
-- 워크스페이스마다 `IDENTITY.md`, `SOUL.md`, `USER.md`, `AGENTS.md`, `TEAM.md`
+- 새 전문가 워크스페이스마다 `IDENTITY.md`, `SOUL.md`, `USER.md`, `AGENTS.md`, `TEAM.md`
+- 채택한 main 워크스페이스: `IDENTITY.md`·`SOUL.md`·`TEAM.md`는 기존 파일을 `*.bak-onboarding-<시각>`으로 보관 후 새로 씀. `AGENTS.md`·`USER.md`는 `<!-- agent-team-onboarding:start -->` ~ `end` 구역만 추가/교체. **`my-work-map.md`, HIA 블록(`<!-- HIA:START -->`), 그 밖의 파일은 건드리지 않는다.**
+- 설정: 모든 계획 에이전트의 `agents.entries.<id>.name` = 화면 이름, 2명 이상이면 `subagents.allowAgents`. 패치 파일 `<teamRoot>/config.patch.json`
 - `<teamRoot>/team.json` — 대시보드 빌더용 기계 명세(`version`, `team`, `agents[{id,name,emoji,role,mission,coordinator,menus,firstTasks}]`)
 - `--project-root`를 주면 `<project-root>/team.md` — HIA 조직도(한국어). 기존 파일은 `team.md.bak-<시각>`으로 보관.
 - `<teamRoot>/.provision-log.json` — 이 도구가 만든 에이전트 기록(resume/rollback 근거)
-- 채널 바인딩, 크론, 기본 에이전트, 기존 에이전트는 **바꾸지 않는다**. 기존 에이전트를 재사용하려면 제안서에만 적고 이 JSON의 `agents`에는 넣지 않는다.
+- 채널 바인딩, 크론, 기본 에이전트 지정, main 이외의 기존 에이전트는 **바꾸지 않는다**. main 이외의 기존 에이전트를 재사용하려면 제안서에만 적고 이 JSON의 `agents`에는 넣지 않는다.
+- rollback: 새로 만든 에이전트만 삭제. 채택한 main은 지우지 않고 보관 파일·원래 이름·위임 설정을 복원하고 관리 구역만 뺀다(HIA 블록 보존).
 
 ## 명령
 
 ```bash
 node <skill-dir>/scripts/team_setup.mjs preview  --plan <plan.json> [--profile <name>] [--workspace-root <abs>] [--project-root <abs>] [--avatar-root <abs>]
-node <skill-dir>/scripts/team_setup.mjs apply    --plan <plan.json> --confirmed [같은 옵션] [--resume] [--delegation-mode <mode>]
+node <skill-dir>/scripts/team_setup.mjs apply    --plan <plan.json> --confirmed [같은 옵션] [--resume] [--delegation-mode <mode>] [--keep-default]
 node <skill-dir>/scripts/team_setup.mjs status   --plan <plan.json> [--profile] [--workspace-root]
 node <skill-dir>/scripts/team_setup.mjs rollback --plan <plan.json> --confirmed [--profile] [--workspace-root]
 ```
 
-종료코드: `0` 성공 · `1` 검증/실행 오류(stderr에 JSON: `created`, `failedAgent`) · `2` 에이전트는 생성됐으나 위임 설정을 수동으로 해야 함(stdout `delegation.manualSteps`).
+종료코드: `0` 성공 · `1` 검증/실행 오류(stderr에 JSON: `created`, `failedAgent`) · `2` 에이전트는 생성됐으나 이름·위임 설정을 수동으로 해야 함(stdout `delegation.manualSteps`).
 
 `--delegation-mode`는 설치된 OpenClaw가 `subagents.delegationMode`를 지원할 때만 쓴다. 기본은 `allowAgents`만 설정한다.
